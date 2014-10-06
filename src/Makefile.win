@@ -1,0 +1,73 @@
+TARGET=../release/jogo
+
+all: $(TARGET)
+
+$(TARGET): icon.o intro.o jogo.o mp3.o almp3_full.o
+	gcc icon.o intro.o jogo.o mp3.o almp3_full.o -o $@ -lalleg
+
+icon.o:
+	windres -O coff -o icon.o icon.rc
+
+intro.o: intro.c intro.h
+	gcc -c intro.c -I$(PATH_INCLUDE_ALMP3)
+
+jogo.o: jogo.c jogo.h
+	gcc -c jogo.c
+
+mp3.o: mp3.c mp3.h
+	gcc -c mp3.c -I$(PATH_INCLUDE_ALMP3)
+
+clean:
+	del $(OBJ_DECODER)
+	del $(PATH_SRC_ALMP3)/almp3.o
+	del almp3_full.o
+	del icon.o
+	del intro.o
+	del jogo.o
+	del mp3.o
+	del $(TARGET)
+
+######################### ALMP3 #########################
+#ALMP3 SOURCE FILE
+PATH_ALMP3 = external/almp3-2.0.5
+PATH_SRC_ALMP3 = $(PATH_ALMP3)/src
+PATH_INCLUDE_ALMP3 = $(PATH_ALMP3)/include
+
+$(PATH_SRC_ALMP3)/almp3.o: $(PATH_SRC_ALMP3)/almp3.c
+	gcc -c $(PATH_SRC_ALMP3)/almp3.c -o $@ -I$(PATH_INCLUDE_ALMP3)
+
+# ALMP3 DECODER FILES
+PATH_SRC_DECODER = $(PATH_ALMP3)/src/decoder
+
+OBJ_DECODER = $(PATH_SRC_DECODER)/common.o \
+	      $(PATH_SRC_DECODER)/dct64_i386.o \
+	      $(PATH_SRC_DECODER)/decode_i386.o \
+	      $(PATH_SRC_DECODER)/interface.o \
+	      $(PATH_SRC_DECODER)/layer2.o \
+	      $(PATH_SRC_DECODER)/layer3.o \
+	      $(PATH_SRC_DECODER)/tabinit.o
+
+$(PATH_SRC_DECODER)/common.o: $(PATH_SRC_DECODER)/common.c
+	gcc -c $(PATH_SRC_DECODER)/common.c -o $@
+
+$(PATH_SRC_DECODER)/dct64_i386.o: $(PATH_SRC_DECODER)/dct64_i386.c
+	gcc -c $(PATH_SRC_DECODER)/dct64_i386.c -o $@
+
+$(PATH_SRC_DECODER)/decode_i386.o: $(PATH_SRC_DECODER)/decode_i386.c
+	gcc -c $(PATH_SRC_DECODER)/decode_i386.c -o $@
+
+$(PATH_SRC_DECODER)/interface.o: $(PATH_SRC_DECODER)/interface.c
+	gcc -c $(PATH_SRC_DECODER)/interface.c -o $@
+
+$(PATH_SRC_DECODER)/layer2.o: $(PATH_SRC_DECODER)/layer2.c
+	gcc -c $(PATH_SRC_DECODER)/layer2.c -o $@
+
+$(PATH_SRC_DECODER)/layer3.o: $(PATH_SRC_DECODER)/layer3.c
+	gcc -c $(PATH_SRC_DECODER)/layer3.c -o $@
+
+$(PATH_SRC_DECODER)/tabinit.o: $(PATH_SRC_DECODER)/tabinit.c
+	gcc -c $(PATH_SRC_DECODER)/tabinit.c -o $@
+
+#ALMP3 FULL (ALMP3 + DECODER)
+almp3_full.o: $(OBJ_DECODER) $(PATH_SRC_ALMP3)/almp3.o 
+	ld -r -o $@ $(PATH_SRC_ALMP3)/almp3.o $(OBJ_DECODER) -I$(PATH_INCLUDE_ALMP3)
