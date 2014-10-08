@@ -1,0 +1,87 @@
+CC = gcc
+CFLAGS = -O2 -Wall 
+RM = del
+INC_PATH = $(PATH_ALMP3)\include
+
+PATH_SRC = src
+PATH_OBJ = src
+TARGET = release\jogo_windows.exe
+
+OBJ_GND =   $(PATH_OBJ)\intro.o \
+	    $(PATH_OBJ)\jogo.o \
+	    $(PATH_OBJ)\mp3.o \
+	    $(PATH_OBJ)\almp3_full.o \
+	    $(PATH_OBJ)\icon.o
+
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ_GND)
+	$(CC) $(CFLAGS) $(OBJ_GND) -o $@ -lalleg
+
+$(PATH_OBJ)\intro.o: $(PATH_SRC)\intro.c $(PATH_SRC)\intro.h
+	$(CC) -c $(CFLAGS) $(PATH_SRC)\intro.c -I$(INC_PATH) -o $@
+
+$(PATH_OBJ)\jogo.o: $(PATH_SRC)\jogo.c $(PATH_SRC)\jogo.h
+	$(CC) -c $(CFLAGS) $(PATH_SRC)\jogo.c -o $@
+
+$(PATH_OBJ)\mp3.o: $(PATH_SRC)\mp3.c $(PATH_SRC)\mp3.h
+	$(CC) -c $(CFLAGS) $(PATH_SRC)\mp3.c -I$(INC_PATH) -o $@
+
+$(PATH_OBJ)\icon.o: $(PATH_SRC)\icon.ico
+	windres -O coff -o $@ $(PATH_SRC)\icon.rc
+
+clean:
+	$(RM) $(OBJ_DECODER)
+	$(RM) $(OBJ_ALMP3)
+	$(RM) $(OBJ_GND)
+
+clean_all: clean
+	$(RM) $(TARGET)
+
+
+######################### ALMP3 #########################
+#ALMP3 SOURCE FILE
+PATH_ALMP3 = src\external\almp3-2.0.5
+PATH_SRC_ALMP3 = $(PATH_ALMP3)\src
+
+OBJ_ALMP3 = $(PATH_SRC_ALMP3)\almp3.o
+ 
+$(PATH_SRC_ALMP3)\almp3.o: $(PATH_SRC_ALMP3)\almp3.c
+	gcc -c $(PATH_SRC_ALMP3)\almp3.c -o $@ -I$(INC_PATH)
+
+# ALMP3 DECODER FILES
+PATH_SRC_DECODER = $(PATH_ALMP3)\src\decoder
+
+OBJ_DECODER = $(PATH_SRC_DECODER)\common.o \
+	      $(PATH_SRC_DECODER)\dct64_i386.o \
+	      $(PATH_SRC_DECODER)\decode_i386.o \
+	      $(PATH_SRC_DECODER)\interface.o \
+	      $(PATH_SRC_DECODER)\layer2.o \
+	      $(PATH_SRC_DECODER)\layer3.o \
+	      $(PATH_SRC_DECODER)\tabinit.o
+
+$(PATH_SRC_DECODER)\common.o: $(PATH_SRC_DECODER)\common.c $(PATH_SRC_DECODER)\mpg123.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\common.c -o $@
+
+$(PATH_SRC_DECODER)\dct64_i386.o: $(PATH_SRC_DECODER)\dct64_i386.c $(PATH_SRC_DECODER)\mpg123.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\dct64_i386.c -o $@
+
+$(PATH_SRC_DECODER)\decode_i386.o: $(PATH_SRC_DECODER)\decode_i386.c $(PATH_SRC_DECODER)\mpg123.h $(PATH_SRC_DECODER)\mpglib.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\decode_i386.c -o $@
+
+$(PATH_SRC_DECODER)\interface.o: $(PATH_SRC_DECODER)\interface.c $(PATH_SRC_DECODER)\mpg123.h $(PATH_SRC_DECODER)\mpglib.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\interface.c -o $@
+
+$(PATH_SRC_DECODER)\layer2.o: $(PATH_SRC_DECODER)\layer2.c $(PATH_SRC_DECODER)\mpg123.h $(PATH_SRC_DECODER)\l2tables.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\layer2.c -o $@
+
+$(PATH_SRC_DECODER)\layer3.o: $(PATH_SRC_DECODER)\layer3.c $(PATH_SRC_DECODER)\mpg123.h $(PATH_SRC_DECODER)\mpglib.h $(PATH_SRC_DECODER)\huffman.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\layer3.c -o $@
+
+$(PATH_SRC_DECODER)\tabinit.o: $(PATH_SRC_DECODER)\tabinit.c $(PATH_SRC_DECODER)\mpg123.h
+	gcc -c $(CFLAGS) $(PATH_SRC_DECODER)\tabinit.c -o $@
+
+#ALMP3 FULL (ALMP3 + DECODER)
+$(PATH_OBJ)\almp3_full.o: $(OBJ_DECODER) $(PATH_SRC_ALMP3)\almp3.o 
+	ld -r -o $@ $(PATH_SRC_ALMP3)\almp3.o $(OBJ_DECODER) -I$(INC_PATH)
